@@ -3,7 +3,7 @@ import personService from "./services/persons"
 import Filter from './Filter'
 import Persons from './Persons'
 import PersonForm from './PersonForm'
-
+import Notification from './Notification'
 
 
 const App = () => {
@@ -11,6 +11,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [successMsg, setSuccessMsg] = useState(null)
+  const [errorMsg, setErrorMsg] = useState(null)
 
   useEffect(() => {
     personService
@@ -42,27 +44,43 @@ const App = () => {
         .then(returnedPerson => {
           setPersons(persons.map(person => person.id != returnedPerson.id ? person : returnedPerson))
           console.log("number updated", returnedPerson)
+          setSuccessMsg(`Updated the number of ${returnedPerson.name}`)
         })
+        
     } else {
       personService
         .createPerson(personObject)
         .then(returnedPerson => {
           setPersons(persons.concat(returnedPerson))
           console.log("person added", returnedPerson)
+          setSuccessMsg(`Added ${returnedPerson.name}`)
       })
-      setNewName("")
-      setNewNumber("")
     }
+    setNewName("")
+    setNewNumber("")
+    setTimeout(() => {
+      setSuccessMsg(null)
+    }, 5000)
   }
 
   const deletePerson = (event, id) => {
+    const selectedPerson = persons.find(p => p.id === id)
     console.log(event)
     event.preventDefault()
     personService
       .deletePerson(id)
       .then(removedPerson => {
         setPersons(persons.filter(person => person.id != removedPerson.id))
-    })
+        setSuccessMsg(`Removed ${removedPerson.name}`)
+      })
+      .catch(error => {
+        setErrorMsg(`Information of ${selectedPerson.name} has already been removed from server`)
+      })
+    
+    setTimeout(() => {
+      setSuccessMsg(null)
+      setErrorMsg(null)
+    }, 5000)
   }
   
   const handleNameChange = event => {
@@ -83,6 +101,9 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+
+      <Notification message={successMsg} className={"success"} />
+      <Notification message={errorMsg} className={"error"} />
 
       <Filter filter={filter} handleChange={handleFilterChange} />
       
