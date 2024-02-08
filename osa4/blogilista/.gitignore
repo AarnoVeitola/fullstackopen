@@ -1,0 +1,2 @@
+.env
+-r node_modules
