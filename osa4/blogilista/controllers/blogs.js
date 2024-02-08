@@ -1,26 +1,27 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
 
-blogsRouter.get('/api/blogs', (request, response, next) => {
-    Blog
-        .find({})
-        .then(blogs => {
-            response.json(blogs)
-        })
-        .catch(error => next(error))
+blogsRouter.get('/api/blogs', async (request, response) => {
+    const blogs = await Blog.find({})
+    response.json(blogs)
 })
 
-blogsRouter.post('/api/blogs', (request, response, next) => {
-    const blog = new Blog(request.body)
-    console.log(request.body)
+blogsRouter.post('/api/blogs', async (request, response) => {
+    const body = request.body
+    if (!body.likes) {
+        body.likes = 0
+    }
+
+    if (!body.title || !body.url) {
+        throw new TypeError('Blog title or url is missing!')
+    }
+
+    const blog = new Blog(body)
+    console.log(body)
     console.log(blog)
 
-    blog
-        .save()
-        .then(result => {
-            response.status(201).json(result)
-        })
-        .catch(error => next(error))
+    const result = await blog.save()
+    response.status(201).json(result)
 })
 
 module.exports = blogsRouter
