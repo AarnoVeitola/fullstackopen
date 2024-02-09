@@ -128,9 +128,47 @@ describe('deletion of a blog', () => {
             .expect(404)
     })
 
-    test('deleting a post with a malformatted id returns 400', async () => {
+    test('deleting a blog with a malformatted id returns 400', async () => {
         await api
             .delete(`/api/blogs/${malformattedId}`)
+            .expect(400)
+    })
+})
+
+describe('updating a blog', () => {
+    const falseId = '65c5f5fc3659003be4b4ca99'
+    const malformattedId = '65c5f5fc3659003be4b4ca9'
+
+    test('updating a blog works', async () => {
+        const blogsAtStart = await helper.blogsInDb()
+        const blog = blogsAtStart[0]
+
+        const updatedBlog = {
+            title: blog.title,
+            author: blog.author,
+            url: blog.url,
+            likes: blog.likes + 1
+        }
+
+        const response = await api
+            .put(`/api/blogs/${blog.id}`)
+            .send(updatedBlog)
+
+        expect(response.body.likes).toBe(blog.likes + 1)
+
+        const blogsAtEnd = await helper.blogsInDb()
+        expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+    })
+
+    test('updating a non-existing blog returns 404', async () => {
+        await api
+            .put(`/api/blogs/${falseId}`)
+            .expect(404)
+    })
+
+    test('updating a blog with a malformatted id returns 400', async () => {
+        await api
+            .put(`/api/blogs/${malformattedId}`)
             .expect(400)
     })
 })
