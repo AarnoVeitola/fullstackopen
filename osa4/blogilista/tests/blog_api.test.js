@@ -5,11 +5,15 @@ const app = require('../app')
 const api = supertest(app)
 
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const helper = require('./test_helper')
 
 beforeEach(async () => {
     await Blog.deleteMany({})
     await Blog.insertMany(helper.initialBlogs)
+
+    await User.deleteMany({})
+    await User.insertMany(helper.initialUsers)
 })
 
 describe('when there is initially some blogs saved', () => {
@@ -169,6 +173,66 @@ describe('updating a blog', () => {
     test('updating a blog with a malformatted id returns 400', async () => {
         await api
             .put(`/api/blogs/${malformattedId}`)
+            .expect(400)
+    })
+})
+
+describe('adding a user', () => {
+    const testUser = {
+        name: 'Test User',
+        username: 'testuser',
+        password: '12345678'
+    }
+
+    test('adding a new user works', async () => {
+        await api
+            .post('/api/users')
+            .send(testUser)
+            .expect(201)
+
+        const usersAtEnd = await helper.usersInDb()
+        expect(usersAtEnd).toHaveLength(helper.initialUsers.length + 1)
+
+        const contents = usersAtEnd.map(u => u.name)
+        expect(contents).toContain(testUser.name)
+    })
+
+    test('the username has to be unique', async () => {
+        await api
+            .post('/api/users')
+            .send(testUser)
+            .expect(201)
+
+        await api
+            .post('/api/users')
+            .send(testUser)
+            .expect(400)
+
+        const usersAtEnd = await helper.usersInDb()
+        expect(usersAtEnd).toHaveLength(helper.initialUsers.length + 1)
+    })
+
+    test('the username must be at least 3 characters', async () => {
+        const invalidUser = {
+            ...testUser,
+            username: 'te'
+        }
+
+        await api
+            .post('/api/users')
+            .send(invalidUser)
+            .expect(400)
+    })
+
+    test('the password must be at least 3 characters', async () => {
+        const invalidUser = {
+            ...testUser,
+            password: '12'
+        }
+
+        await api
+            .post('/api/users')
+            .send(invalidUser)
             .expect(400)
     })
 })
