@@ -8,12 +8,30 @@ const Blog = require('../models/blog')
 const User = require('../models/user')
 const helper = require('./test_helper')
 
+let token = ''
+
 beforeEach(async () => {
     await Blog.deleteMany({})
     await Blog.insertMany(helper.initialBlogs)
 
     await User.deleteMany({})
     await User.insertMany(helper.initialUsers)
+
+    const testUser = {
+        username: 'testuser',
+        name: 'Test User',
+        password: '12345678'
+    }
+    
+    await api
+        .post('/api/users')
+        .send(testUser)
+
+    const response = await api
+        .post('/api/login')
+        .send(testUser)
+
+    token = response.body.token
 })
 
 describe('when there is initially some blogs saved', () => {
@@ -41,6 +59,25 @@ describe('when there is initially some blogs saved', () => {
 
 
 describe('addition of a new blog', () => {
+    test('adding a blog without a token returns 401', async () => {
+        const newBlog = {
+            title: 'New Blog',
+            author: 'New Author',
+            url: 'http://newblog.com/',
+            likes: 0
+        }
+        await api
+            .post('/api/blogs')
+            .send(newBlog)
+            .expect(401)
+
+        const blogsAtEnd = await helper.blogsInDb()
+        expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+
+        const contents = blogsAtEnd.map(b => b.title)
+        expect(contents).not.toContain('New Blog')
+    })
+
     test('adding a blog works', async () => {
         const newBlog = {
             title: 'New Blog',
@@ -52,6 +89,7 @@ describe('addition of a new blog', () => {
         await api
             .post('/api/blogs')
             .send(newBlog)
+            .set('Authorization', `Bearer ${token}`)
             .expect(201)
             .expect('Content-Type', /application\/json/)
 
@@ -71,6 +109,7 @@ describe('addition of a new blog', () => {
 
         const response = await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${token}`)
             .send(newBlog)
 
         expect(response.body.likes).toBe(0)
@@ -89,11 +128,13 @@ describe('addition of a new blog', () => {
 
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${token}`)
             .send(testBlog1)
             .expect(400)
         
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${token}`)
             .send(testBlog2)
             .expect(400)
     })
@@ -116,10 +157,12 @@ describe('deletion of a blog', () => {
 
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${token}`)
             .send(newBlog)
 
         await api
             .delete(`/api/blogs/${id}`)
+            .set('Authorization', `Bearer ${token}`)
             .expect(204)
 
         const blogsAtEnd = await helper.blogsInDb()
@@ -129,12 +172,14 @@ describe('deletion of a blog', () => {
     test('deleting a non-existing blog returns 404', async () => {
         await api
             .delete(`/api/blogs/${falseId}`)
+            .set('Authorization', `Bearer ${token}`)
             .expect(404)
     })
 
     test('deleting a blog with a malformatted id returns 400', async () => {
         await api
             .delete(`/api/blogs/${malformattedId}`)
+            .set('Authorization', `Bearer ${token}`)
             .expect(400)
     })
 })
@@ -178,43 +223,47 @@ describe('updating a blog', () => {
 })
 
 describe('adding a user', () => {
-    const testUser = {
-        name: 'Test User',
-        username: 'testuser',
+    const newUser = {
+        name: 'New User',
+        username: 'newuser',
         password: '12345678'
     }
 
     test('adding a new user works', async () => {
+        const initialUsers = await helper.usersInDb()
+
         await api
             .post('/api/users')
-            .send(testUser)
+            .send(newUser)
             .expect(201)
 
         const usersAtEnd = await helper.usersInDb()
-        expect(usersAtEnd).toHaveLength(helper.initialUsers.length + 1)
+        expect(usersAtEnd).toHaveLength(initialUsers.length + 1)
 
         const contents = usersAtEnd.map(u => u.name)
-        expect(contents).toContain(testUser.name)
+        expect(contents).toContain(newUser.name)
     })
 
     test('the username has to be unique', async () => {
+        const initialUsers = await helper.usersInDb()
+
         await api
             .post('/api/users')
-            .send(testUser)
+            .send(newUser)
             .expect(201)
 
         await api
             .post('/api/users')
-            .send(testUser)
+            .send(newUser)
             .expect(400)
 
         const usersAtEnd = await helper.usersInDb()
-        expect(usersAtEnd).toHaveLength(helper.initialUsers.length + 1)
+        expect(usersAtEnd).toHaveLength(initialUsers.length + 1)
     })
 
     test('the username must be at least 3 characters', async () => {
         const invalidUser = {
-            ...testUser,
+            ...newUser,
             username: 'te'
         }
 
@@ -226,7 +275,7 @@ describe('adding a user', () => {
 
     test('the password must be at least 3 characters', async () => {
         const invalidUser = {
-            ...testUser,
+            ...newUser,
             password: '12'
         }
 
