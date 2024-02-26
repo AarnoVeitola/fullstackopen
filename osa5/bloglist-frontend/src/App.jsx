@@ -14,7 +14,7 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  
+
   const blogFormRef = useRef()
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const App = () => {
   useEffect(() => {
     blogService.getAll().then(blogs =>
       setBlogs( blogs )
-    )  
+    )
   }, [])
 
   const handleLogin = async (event) => {
@@ -70,7 +70,7 @@ const App = () => {
           ...returnedBlog,
           user: user,
         }))
-        
+
         setSuccessMessage(`a new blog ${returnedBlog.title} by ${returnedBlog.author} added`)
         setTimeout(() => {
           setSuccessMessage(null)
@@ -110,7 +110,7 @@ const App = () => {
       <div>
         <h2>Log in to application</h2>
         <Notification message={errorMessage} className='error' />
-        <LoginForm 
+        <LoginForm
           username={username}
           password={password}
           handleUsernameChange={({ target }) => setUsername(target.value)}
@@ -119,7 +119,7 @@ const App = () => {
         />
       </div>
     )
-  } 
+  }
 
   return (
     <div>
@@ -132,15 +132,15 @@ const App = () => {
         <button type='submit'>logout</button>
       </form>
       <Togglable buttonLabel='new blog' ref={blogFormRef}>
-        <BlogForm createBlog={addBlog} />      
+        <BlogForm createBlog={addBlog} />
       </Togglable>
 
       {blogs.sort((a, b) => b.likes - a.likes).map(blog =>
-        <Blog 
-          key={blog.id} 
-          blog={blog} 
+        <Blog
+          key={blog.id}
+          blog={blog}
           handleLike={handleLike}
-          handleDelete={deleteBlog} 
+          handleDelete={deleteBlog}
           user={user}
         />
       )}
