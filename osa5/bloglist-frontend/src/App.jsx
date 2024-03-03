@@ -129,7 +129,12 @@ const App = () => {
       <Notification message={successMessage} className='success' />
       <form onSubmit={handleLogout}>
         {user.name} logged in
-        <button type='submit'>logout</button>
+        <button
+          type='submit'
+          id='logout-button'
+        >
+          logout
+        </button>
       </form>
       <Togglable buttonLabel='new blog' ref={blogFormRef}>
         <BlogForm createBlog={addBlog} />

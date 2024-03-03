@@ -10,7 +10,12 @@ const Blog = ({
   const [visible, setVisible] = useState(false)
 
   const deleteButton = () => (
-    <button onClick={() => handleDelete(blog)}>delete</button>
+    <button
+      onClick={() => handleDelete(blog)}
+      id='delete-button'
+    >
+      delete
+    </button>
   )
 
   const blogStyle = {
@@ -25,19 +30,34 @@ const Blog = ({
   const showWhenVisible = { display: visible ? '' : 'none' }
 
   return (
-    <div style={blogStyle}>
+    <div style={blogStyle} className='blog'>
       <div style={hideWhenVisible} id='visibleContent'>
         {blog.title} {blog.author}
-        <button onClick={() => setVisible(true)}>view</button>
+        <button
+          onClick={() => setVisible(true)}
+          id='view-button'
+        >
+          view
+        </button>
       </div>
       <div style={showWhenVisible} id='hiddenContent'>
         {blog.title} {blog.author}
-        <button onClick={() => setVisible(false)}>hide</button>
+        <button
+          onClick={() => setVisible(false)}
+          id='hide-button'
+        >
+          hide
+        </button>
         <br/>
         {blog.url}
         <br/>
         likes {blog.likes}
-        <button onClick={() => handleLike(blog)}>like</button>
+        <button
+          onClick={() => handleLike(blog)}
+          id='like-button'
+        >
+          like
+        </button>
         <br/>
         {blog.user.name}
         <br/>
