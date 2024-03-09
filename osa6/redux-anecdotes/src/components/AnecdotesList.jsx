@@ -20,10 +20,12 @@ const AnecdotesList = () => {
   const dispatch = useDispatch()
   const anecdotes = useSelector(state => {
     console.log(state.anecdotes)
-    return state.anecdotes.filter(a => 
-      a.content
+    return state.anecdotes.filter(a => {
+      console.log(a)
+      return a.content
         .toLowerCase()
         .includes(state.filter.toLowerCase())
+      }
       )
   })
   return (
