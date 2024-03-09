@@ -17,7 +17,10 @@ const Anecdote = ({ anecdote, handleClick }) => {
 
 const AnecdotesList = () => {
   const dispatch = useDispatch()
-  const anecdotes = useSelector(state => state)
+  const anecdotes = useSelector(state => {
+    console.log(state.anecdotes)
+    return state.anecdotes.filter(a => a.content.includes(state.filter))
+  })
   return (
     <div>
       {anecdotes.sort((a, b) => b.votes - a.votes).map(anecdote =>
