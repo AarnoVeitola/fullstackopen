@@ -1,36 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit'
 
-/* THESE ARE USELESS SINCE WE ARE USING JSON SERVER
-const getId = () => (100000 * Math.random()).toFixed(0)
-
-const asObject = (anecdote) => {
-  return {
-    content: anecdote,
-    id: getId(),
-    votes: 0
-  }
-}
-*/
+import anecdoteService from '../services/anecdotes'
 
 const anecdoteSlice = createSlice({
   name: 'anecdotes',
   initialState: [],
   reducers: {
-    createAnecdote(state, action) {
+    appendAnecdote(state, action) {
       console.log(action.payload)
       const newAnecdote = action.payload
       state.push(newAnecdote)
-    },
-    voteAnecdote(state, action) {
-      const id = action.payload
-      const anecdoteToChange = state.find(a => a.id === id)
-      const changedAnecdote = {
-        ...anecdoteToChange,
-        votes: Number(anecdoteToChange.votes) + 1
-      }
-      return state.map(anecdote => 
-        anecdote.id !== id ? anecdote : changedAnecdote  
-      )
     },
     setAnecdotes(state, action) {
       return action.payload
@@ -38,6 +17,32 @@ const anecdoteSlice = createSlice({
   }
 })
 
-export const { createAnecdote, voteAnecdote, setAnecdotes } = anecdoteSlice.actions
+export const { appendAnecdote, setAnecdotes } = anecdoteSlice.actions
+
+export const initializeAnecdotes = () => {
+  return async dispatch => {
+    const anecdotes = await anecdoteService.getAll()
+    dispatch(setAnecdotes(anecdotes))
+  }
+}
+
+export const createAnecdote = content => {
+  return async dispatch => {
+    const newAnecdote = await anecdoteService.createNew(content)
+    dispatch(appendAnecdote(newAnecdote))
+  }
+}
+
+export const voteAnecdote = id => {
+  return async dispatch => {
+    const anecdotes = await anecdoteService.getAll()
+    const object = anecdotes.find(a => a.id === id)
+    const updatedAnecdote = { ...object, votes: Number(object.votes) + 1}
+    await anecdoteService.update(updatedAnecdote)
+    dispatch(setAnecdotes(anecdotes.map(anecdote => 
+      anecdote.id !== id ? anecdote : updatedAnecdote  
+    )))
+  }
+}
 
 export default anecdoteSlice.reducer
